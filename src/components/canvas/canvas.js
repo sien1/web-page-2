@@ -22,7 +22,7 @@ class Canvas extends Component {
     componentDidMount(){
         const canvas  = this.refs.canvas;
         canvas.height = document.documentElement.clientHeight;
-        canvas.width  = document.documentElement.clientHeight;
+        canvas.width  = document.documentElement.clientWidth;
 
         this.setState({
             canvas: {
@@ -31,17 +31,15 @@ class Canvas extends Component {
                 innerWidth: canvas.width
             } 
         },() => {
-            const { x, y,  radius, dy, dx }  = this.state.circle;
+            const { x, y, radius, dy, dx }  = this.state.circle;
             const {ctx, innerWidth, innerHeight }  = this.state.canvas;
-            //const circle = new Circle( x, y, ctx, radius, dy, dx, innerWidth, innerHeight );
-           // circle.draw();
+        //     const circle = new Circle( x, y, ctx, radius, dy, dx, innerWidth, innerHeight );
+        //    circle.draw();
 
-            const hexagon =  new Hexagon(this.state.canvas.ctx, this.state.hexagon.size, {x:50, y:50});
+            const hexagon =  new Hexagon(ctx,  {x:50, y:50}, this.state.hexagon.size);
             hexagon.drawHex();
+            
         });
-
-       
-
     }
 
 
@@ -76,7 +74,7 @@ class Canvas extends Component {
     }
 
     render(){
-        return <canvas ref="canvas"></canvas>
+        return <canvas ref="canvas" style={{background:"gray"}}></canvas>
     }
 
 }
@@ -86,17 +84,20 @@ function Hexagon(ctx, center, size) {
     this.center = center;
 
     this.getHexCornerCoord =  function(center, i) {
-        let angle_deg = 60 * i + 30;
+        let angle_deg = 60 * i + 60;
         let angle_rad = Math.PI / 180 * angle_deg;
         let x = center.x + size * Math.cos(angle_rad);
         let y = center.y + size * Math.sin(angle_rad);
-        return this.point(x, y);
+        const point = new Point(x, y);
+        return point;
     }
 
     this.drawHex = function() {
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i <= 5; i++) {
             let start = this.getHexCornerCoord(this.center, i);
             let end   = this.getHexCornerCoord(this.center, i + 1);
+
+            
             this.drawLine({x: start.x, y: start.y}, {x:end.x, y: end.y});
         }
     }
@@ -108,12 +109,23 @@ function Hexagon(ctx, center, size) {
         this.ctx.strokeStyle = 'blue';
         this.ctx.stroke();
         this.ctx.closePath();
-        console.log(this.ctx);
+    }
+
+    this.drawSomething = function() {
+        this.ctx.beginPath(); 
+        this.ctx.arc(300, 300, 30, 0, Math.PI * 2, false);
+        this.ctx.strokeStyle = 'blue';
+        this.ctx.stroke();
+        
     }
 
     this.point = function(x, y) {
         return { x:x, y: y };
     }
+}
+
+function Point(x, y) {
+    return { x:x, y: y };
 }
 
 function Circle(x, y, ctx, radius, dy, dx, innerWidth, innerHeight) {
