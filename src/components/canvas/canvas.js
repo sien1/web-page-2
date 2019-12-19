@@ -6,14 +6,15 @@ class Canvas extends Component {
         super(props);
         this.state= {
             circle:{
-                x:300,
-                y:300,
+                x:0,
+                y:0,
                 dy:8,
                 dx:8,
                 radius:30
             },
             hexagon: {
-                size:30
+                size:50,
+                hexOrigin:{x: Math.round(document.documentElement.clientWidth / 2), y:document.documentElement.clientHeight / 2}
             }
 
         };
@@ -36,20 +37,19 @@ class Canvas extends Component {
         //     const circle = new Circle( x, y, ctx, radius, dy, dx, innerWidth, innerHeight );
         //    circle.draw();
 
-            const hexagon =  new Hexagon(ctx,  {x:50, y:50}, this.state.hexagon.size);
-            hexagon.drawHex();
+            const hexagon =  new Hexagon(ctx,  {x:0, y:0}, this.state.hexagon.size, this.state.hexagon.hexOrigin, innerWidth, innerHeight);
+            hexagon.drawHexes();
             
         });
     }
 
 
-    animate = () => {
+    animate = () => { 
         let x  = this.state.animate.x;
         let y  = this.state.animate.y;
         let dx = this.state.animate.dx;
 
         const {ctx, innerHeight, innerWidth } = this.state.canvas;
-
         requestAnimationFrame(this.animate);
         this.state.ctx.clearRect(0, 0, this.state.canvas.width, this.state.canvas.height);
         ctx.beginPath(); 
@@ -74,14 +74,16 @@ class Canvas extends Component {
     }
 
     render(){
-        return <canvas ref="canvas" style={{background:"gray"}}></canvas>
+        return <canvas ref="canvas" style={{background:"black"}}></canvas>
     }
 
 }
 
-function Hexagon(ctx, center, size) {
+function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
     this.ctx = ctx;
     this.center = center;
+    this.size = size;
+    this.hexOrigin = hexOrigin
 
     this.getHexCornerCoord =  function(center, i) {
         let angle_deg = 60 * i + 60;
@@ -92,12 +94,27 @@ function Hexagon(ctx, center, size) {
         return point;
     }
 
-    this.drawHex = function() {
-        for (let i = 0; i <= 5; i++) {
-            let start = this.getHexCornerCoord(this.center, i);
-            let end   = this.getHexCornerCoord(this.center, i + 1);
+    this.getHexParameters = function() {
+        let hexHeight = size * 2;
+        let hexWidth = Math.sqrt(3)/2 * hexHeight;
+        let vertDist = hexHeight * 3/4;
+        let horizDist = hexWidth;
+        return { hexWidth, hexHeight, vertDist, horizDist };  
 
-            
+    }
+
+    this.hexToPixel = function(h) {
+        let x = this.size * Math.sqrt(10) * (h.q + h.r/2) + hexOrigin.x;
+        let y = this.size * 3/3 * h.r + hexOrigin.y;
+        
+        const point = new Point(x, y);
+        return point;
+    }
+
+    this.drawHex = function(center) {
+        for (let i = 0; i <= 5; i++) {
+            let start = this.getHexCornerCoord(center, i);
+            let end   = this.getHexCornerCoord(center, i + 1);
             this.drawLine({x: start.x, y: start.y}, {x:end.x, y: end.y});
         }
     }
@@ -106,19 +123,32 @@ function Hexagon(ctx, center, size) {
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(end.x, end.y);
-        this.ctx.strokeStyle = 'blue';
+        this.ctx.strokeStyle = 'red';
         this.ctx.stroke();
         this.ctx.closePath();
     }
 
-    this.drawSomething = function() {
-        this.ctx.beginPath(); 
-        this.ctx.arc(300, 300, 30, 0, Math.PI * 2, false);
-        this.ctx.strokeStyle = 'blue';
-        this.ctx.stroke();
-        
+    this.drawHexes = function() {
+        const { hexWidth, hexHeight, vertDist, horizDist } = this.getHexParameters();
+        let qLeftSide = Math.round(hexOrigin.x / hexWidth);
+        let qRightSide = Math.round(canvasWidth - hexOrigin.x)/hexWidth;
+        let rTopSide = Math.round(hexOrigin.y / (hexHeight/3) );
+        let rBottomSide = Math.round((canvasHeight - hexOrigin.y) / (hexHeight/2));
+
+        for (let r = -rTopSide; r <= rBottomSide; r++) {
+            for (let q = -qLeftSide; q <= qRightSide; q++) {
+                let center = this.hexToPixel(new Hex(q, r));
+                this.drawHex(center);
+                this.drawHexCoordinates(center, new Hex(q, r));
+            }
+        }
     }
 
+    this.drawHexCoordinates = function(center, h) {
+        this.ctx.fillText(h.q, center.x-10, center.y);
+        this.ctx.fillText(h.r, center.x, center.y);
+    }
+    
     this.point = function(x, y) {
         return { x:x, y: y };
     }
@@ -126,6 +156,10 @@ function Hexagon(ctx, center, size) {
 
 function Point(x, y) {
     return { x:x, y: y };
+}
+
+function Hex(q, r ) {
+    return { q: q, r: r };
 }
 
 function Circle(x, y, ctx, radius, dy, dx, innerWidth, innerHeight) {
