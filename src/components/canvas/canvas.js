@@ -13,38 +13,53 @@ class Canvas extends Component {
                 radius:30
             },
             hexagon: {
-                size:50,
-                hexOrigin:{x: Math.round(document.documentElement.clientWidth / 2), y:document.documentElement.clientHeight / 2}
-            }
-
+                size:40,
+                hexOrigin:{x: Math.round(document.documentElement.clientWidth / 2), y:Math.round(document.documentElement.clientHeight / 2)}
+            },
+            timeout:false,
+            delay:250
         };
     }
 
     componentDidMount(){
+        
+        this.adjustScreen();
+
+        window.addEventListener('resize', () => {
+            clearTimeout(this.state.timeout);
+            this.setState({timeout: setTimeout(this.adjustScreen, this.state.delay)});
+        });
+    }
+
+    adjustScreen = () => {
         const canvas  = this.refs.canvas;
         canvas.height = document.documentElement.clientHeight;
         canvas.width  = document.documentElement.clientWidth;
 
         this.setState({
-            canvas: {
-                ctx: canvas.getContext("2d"), 
-                innerHeight: canvas.height, 
+            canvas:{
+                ctx: canvas.getContext("2d"),
+                innerHeight: canvas.height,
                 innerWidth: canvas.width
-            } 
-        },() => {
-            const { x, y, radius, dy, dx }  = this.state.circle;
+            }
+        }, function(){
             const {ctx, innerWidth, innerHeight }  = this.state.canvas;
-        //     const circle = new Circle( x, y, ctx, radius, dy, dx, innerWidth, innerHeight );
-        //    circle.draw();
-
+            
+            ctx.clearRect(0, 0, this.state.canvas.width, this.state.canvas.height);
             const hexagon =  new Hexagon(ctx,  {x:0, y:0}, this.state.hexagon.size, this.state.hexagon.hexOrigin, innerWidth, innerHeight);
             hexagon.drawHexes();
-            
         });
+
+        if( canvas.height > canvas.width ) {
+            
+        }
+        else {
+            
+        }
+
     }
 
-
-    animate = () => { 
+    animate = () => {
         let x  = this.state.animate.x;
         let y  = this.state.animate.y;
         let dx = this.state.animate.dx;
@@ -52,13 +67,11 @@ class Canvas extends Component {
         const {ctx, innerHeight, innerWidth } = this.state.canvas;
         requestAnimationFrame(this.animate);
         this.state.ctx.clearRect(0, 0, this.state.canvas.width, this.state.canvas.height);
-        ctx.beginPath(); 
+        ctx.beginPath();
         ctx. arc(x, y, 30, 0, Math.PI * 2, false);
         ctx.strokeStyle = 'blue';
         ctx.stroke();
 
-        
-        
         // if (x + this.state.animate.radius > this.state.canvas.width || x - this.state.animate.radius < 0 ) {
         //     this.state.animate.dx = -this.state.animate.dx;
         // }
@@ -74,7 +87,7 @@ class Canvas extends Component {
     }
 
     render(){
-        return <canvas ref="canvas" style={{background:"black"}}></canvas>
+        return <canvas ref="canvas" style={{background:"white"}}></canvas>
     }
 
 }
@@ -99,13 +112,12 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
         let hexWidth = Math.sqrt(3)/2 * hexHeight;
         let vertDist = hexHeight * 3/4;
         let horizDist = hexWidth;
-        return { hexWidth, hexHeight, vertDist, horizDist };  
-
+        return { hexWidth, hexHeight, vertDist, horizDist };
     }
 
     this.hexToPixel = function(h) {
-        let x = this.size * Math.sqrt(10) * (h.q + h.r/2) + hexOrigin.x;
-        let y = this.size * 3/3 * h.r + hexOrigin.y;
+        let x = this.size * Math.sqrt(11) * (h.q + h.r/2) + hexOrigin.x;
+        let y = this.size * 3/3.1 * h.r + hexOrigin.y;
         
         const point = new Point(x, y);
         return point;
@@ -119,11 +131,11 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
         }
     }
 
-    this.drawLine =  function(start, end) {
+    this.drawLine =  function(start, end) { 
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(end.x, end.y);
-        this.ctx.strokeStyle = 'red';
+        this.ctx.strokeStyle = 'silver';
         this.ctx.stroke();
         this.ctx.closePath();
     }
@@ -136,8 +148,8 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
         let rBottomSide = Math.round((canvasHeight - hexOrigin.y) / (hexHeight/2));
 
         for (let r = -rTopSide; r <= rBottomSide; r++) {
-            for (let q = -qLeftSide; q <= qRightSide; q++) {
-                let center = this.hexToPixel(new Hex(q, r));
+            for (let q = -qLeftSide-4; q <= qRightSide+4; q++) {
+                let center = this.hexToPixel(new Hex(q, r));    
                 this.drawHex(center);
                 this.drawHexCoordinates(center, new Hex(q, r));
             }
@@ -152,6 +164,27 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
     this.point = function(x, y) {
         return { x:x, y: y };
     }
+
+    this.animate = function() {
+        const ctx = this.state.ctx;
+        let x  = this.state.animate.x;
+        let y  = this.state.animate.y;
+        let dx = this.state.animate.dx;
+        let dy = this.state.animate.dy;
+
+        requestAnimationFrame(this.animate);
+        this.state.ctx.clearRect(0, 0, this.state.canvas.width, this.state.canvas.height);
+        ctx.beginPath();
+        ctx. arc(x, y, 30, 0, Math.PI * 2, false);
+        ctx.strokeStyle = 'blue';
+        ctx.stroke();
+    } 
+
+    // this.animateHexes = function() {
+    //     array.forEach(element => {
+            
+    //     });
+    // }
 }
 
 function Point(x, y) {
@@ -176,7 +209,7 @@ function Circle(x, y, ctx, radius, dy, dx, innerWidth, innerHeight) {
     this.draw = function() {
         this.ctx.beginPath(); 
         this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        this.ctx.strokeStyle = 'black';
+        this.ctx.strokeStyle = 'white';
         this.ctx.stroke();
     }
 
@@ -187,12 +220,11 @@ function Circle(x, y, ctx, radius, dy, dx, innerWidth, innerHeight) {
 
         if (this.y + this.radius > this.innerHeight || this.y - this.radius < 0 ) {
             this.dy = -this.dy;
-        }        
+        }
 
         this.x += this.dx;
         this.y += this.dy;
     }
-
 }
 
 export default Canvas;

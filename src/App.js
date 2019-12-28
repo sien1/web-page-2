@@ -6,9 +6,7 @@ import Canvas from './components/canvas/canvas';
 
 function App() {
   return (
-    
-        <Canvas/>
-  
+    <Canvas/>
   );
 }
 
