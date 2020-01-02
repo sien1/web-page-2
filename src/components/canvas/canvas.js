@@ -5,7 +5,7 @@ class Canvas extends Component {
     constructor(props){
         super(props);
         this.state= {
-            circle:{
+            circle: {
                 x:0,
                 y:0,
                 dy:8,
@@ -68,7 +68,7 @@ class Canvas extends Component {
         requestAnimationFrame(this.animate);
         this.state.ctx.clearRect(0, 0, this.state.canvas.width, this.state.canvas.height);
         ctx.beginPath();
-        ctx. arc(x, y, 30, 0, Math.PI * 2, false);
+        ctx.arc(x, y, 30, 0, Math.PI * 2, false);
         ctx.strokeStyle = 'blue';
         ctx.stroke();
 
@@ -86,7 +86,7 @@ class Canvas extends Component {
         // this.state.animate.y += this.state.animate.dy;
     }
 
-    render(){
+    render(){ 
         return <canvas ref="canvas" style={{background:"white"}}></canvas>
     }
 
@@ -109,7 +109,7 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
 
     this.getHexParameters = function() {
         let hexHeight = size * 2;
-        let hexWidth = Math.sqrt(3)/2 * hexHeight;
+        let hexWidth = Math.sqrt(3)/2 * hexHeight;  
         let vertDist = hexHeight * 3/4;
         let horizDist = hexWidth;
         return { hexWidth, hexHeight, vertDist, horizDist };
@@ -123,10 +123,11 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
         return point;
     }
 
-    this.drawHex = function(center) {
+    this.drawHex = function(center, fillColor) {
         for (let i = 0; i <= 5; i++) {
             let start = this.getHexCornerCoord(center, i);
             let end   = this.getHexCornerCoord(center, i + 1);
+            this.fillHex(center, fillColor)
             this.drawLine({x: start.x, y: start.y}, {x:end.x, y: end.y});
         }
     }
@@ -135,7 +136,7 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(end.x, end.y);
-        this.ctx.strokeStyle = 'silver';
+        this.ctx.strokeStyle = 'green';
         this.ctx.stroke();
         this.ctx.closePath();
     }
@@ -149,11 +150,35 @@ function Hexagon(ctx, center, size, hexOrigin, canvasWidth, canvasHeight) {
 
         for (let r = -rTopSide; r <= rBottomSide; r++) {
             for (let q = -qLeftSide-4; q <= qRightSide+4; q++) {
-                let center = this.hexToPixel(new Hex(q, r));    
-                this.drawHex(center);
+                let center = this.hexToPixel(new Hex(q, r));
+                this.drawHex(center, "black");
                 this.drawHexCoordinates(center, new Hex(q, r));
             }
         }
+    }
+
+    this.fillHex = function(center, fillColor) {
+        
+        let c0 = this.getHexCornerCoord(center, 0);
+        let c1 = this.getHexCornerCoord(center, 1);
+        let c2 = this.getHexCornerCoord(center, 2);
+        let c3 = this.getHexCornerCoord(center, 3);
+        let c4 = this.getHexCornerCoord(center, 4);
+        let c5 = this.getHexCornerCoord(center, 5);
+
+        this.ctx.beginPath();
+        this.ctx.fillStyle = fillColor;
+        this.ctx.globalAlpha = .5;
+        this.ctx.moveTo(c0.x ,c0.y);
+        this.ctx.moveTo(c1.x ,c1.y);
+        this.ctx.moveTo(c2.x ,c2.y);
+        this.ctx.moveTo(c3.x ,c3.y);
+        this.ctx.moveTo(c4.x ,c4.y);
+        this.ctx.moveTo(c5.x ,c5.y);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+
     }
 
     this.drawHexCoordinates = function(center, h) {
@@ -216,7 +241,7 @@ function Circle(x, y, ctx, radius, dy, dx, innerWidth, innerHeight) {
     this.update = function(){
         if (this.x + this.radius > this.innerWidth || this.x - this.radius < 0 ) {
             this.dx = -this.dx;
-        }
+        }   
 
         if (this.y + this.radius > this.innerHeight || this.y - this.radius < 0 ) {
             this.dy = -this.dy;
